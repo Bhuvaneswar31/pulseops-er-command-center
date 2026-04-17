@@ -228,16 +228,9 @@ def highlight(row):
         return ['background-color: #4CAF50']*len(row)
 
 df = st.session_state.patients.copy()
+df = df.sort_values(by="ArrivalTime", ascending=False)
 
-# ✅ Show CURRENT LIVE TIME (same for all rows)
-current_time = datetime.now().strftime("%H:%M")
-
-df["ArrivalTime"] = current_time
-
-st.dataframe(
-    df.style.apply(highlight, axis=1),
-    width="stretch"
-)
+st.dataframe(df, width="stretch")
 
 # ---------------- INPATIENT vs OUTPATIENT ----------------
 st.subheader("🏥 Patient Flow Analysis")
