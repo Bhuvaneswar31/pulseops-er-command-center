@@ -103,8 +103,9 @@ if now - st.session_state.last_update >= interval:
                 "PatientID": f"P{random.randint(1000,9999)}",
                 "Triage": triage,
                 "WaitTime": 0,
-                "Department": random.choice(["ER","Cardiology","Orthopedics","Neurology"]),
-                "ArrivalTime": now.strftime("%H:%M:%S")
+                "Department": random.choice(["ER","Cardiology","Orthopedics","Neurology","Pediatrics","General Medicine",
+    "Radiology"]),
+                "ArrivalTime": datetime.now().strftime("%H:%M:%S")
             }])
         ], ignore_index=True)
 
