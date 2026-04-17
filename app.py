@@ -134,7 +134,7 @@ if now - st.session_state.last_update >= interval:
         ], ignore_index=True)
 
 
-    # -------- DISCHARGE LOGIC (TRACKING) 🔥 --------
+   
 # -------- DISCHARGE LOGIC (WAIT-TIME BASED) 🔥 --------
 discharged_now = 0
 
