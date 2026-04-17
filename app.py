@@ -105,7 +105,7 @@ if now - st.session_state.last_update >= interval:
                 "WaitTime": 0,
                 "Department": random.choice(["ER","Cardiology","Orthopedics","Neurology","Pediatrics","General Medicine",
     "Radiology"]),
-                "ArrivalTime": datetime.now()
+                "ArrivalTime": now.strftime("%H:%M:%S")
             }])
         ], ignore_index=True)
 
