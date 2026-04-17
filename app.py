@@ -227,10 +227,10 @@ def highlight(row):
     else:
         return ['background-color: #4CAF50']*len(row)
 
-df = st.session_state.patients.copy()
-df = df.sort_values(by="ArrivalTime", ascending=False)
-
-st.dataframe(df, width="stretch")
+st.dataframe(
+    st.session_state.patients.style.apply(highlight, axis=1),
+    width="stretch"
+)
 
 # ---------------- INPATIENT vs OUTPATIENT ----------------
 st.subheader("🏥 Patient Flow Analysis")
