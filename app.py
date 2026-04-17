@@ -62,6 +62,7 @@ if "last_update" not in st.session_state:
     st.session_state.last_update = datetime.now()
 
 # ---------------- SIMULATION ----------------
+arrivals = 0  # ✅ SAFE DEFAULT
 now = datetime.now()
 
 if now - st.session_state.last_update >= interval:
@@ -136,15 +137,17 @@ if now - st.session_state.last_update >= interval:
 
     st.session_state.last_discharged = discharged_now
 
-    # -------- STORE HISTORY --------
+    # -------- STORE HISTORY --------    
     st.session_state.history = pd.concat([
         st.session_state.history,
-        pd.DataFrame({"Time":[now],"Admissions":[arrivals]})
+        pd.DataFrame({
+            "Time": [now],
+            "Admissions": [arrivals]
+        })
     ], ignore_index=True)
 
     st.session_state.last_update = now
-
-# -------- WAIT TIME UPDATE --------
+  # -------- WAIT TIME UPDATE --------
 if not st.session_state.patients.empty:
     st.session_state.patients["WaitTime"] += 1
 
