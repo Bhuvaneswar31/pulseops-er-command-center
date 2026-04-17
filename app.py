@@ -133,13 +133,44 @@ if now - st.session_state.last_update >= interval:
             }])
         ], ignore_index=True)
 
-    # -------- DISCHARGE LOGIC --------
-    if not st.session_state.patients.empty:
-        discharge_rate = 0.1
-        discharge_count = int(len(st.session_state.patients) * discharge_rate)
 
-        if discharge_count > 0:
-            st.session_state.patients = st.session_state.patients.iloc[discharge_count:].reset_index(drop=True)
+    # -------- DISCHARGE LOGIC (TRACKING) 🔥 --------
+# -------- DISCHARGE LOGIC (WAIT-TIME BASED) 🔥 --------
+discharged_now = 0
+
+if not st.session_state.patients.empty:
+
+    discharge_rate = 0.1  # 10% leave per cycle
+    discharge_count = int(len(st.session_state.patients) * discharge_rate)
+
+    if discharge_count > 0:
+        discharged_now = discharge_count
+
+        # Initialize discharged storage
+        if "discharged" not in st.session_state:
+            st.session_state.discharged = pd.DataFrame(
+                columns=st.session_state.patients.columns
+            )
+
+        # Select patients with highest wait time
+        discharged_patients = (
+            st.session_state.patients
+            .sort_values(by="WaitTime", ascending=False)
+            .iloc[:discharge_count]
+        )
+
+        # Add to discharged list
+        st.session_state.discharged = pd.concat(
+            [st.session_state.discharged, discharged_patients],
+            ignore_index=True
+        )
+
+        # Remove from active patients
+        remaining_patients = st.session_state.patients.drop(discharged_patients.index)
+        st.session_state.patients = remaining_patients.reset_index(drop=True)
+
+# Store last cycle discharge count
+    st.session_state.last_discharged = discharged_now
 
     # -------- STORE HISTORY --------
     st.session_state.history = pd.concat([
@@ -232,6 +263,39 @@ st.dataframe(
     st.session_state.patients.style.apply(highlight, axis=1),
     width="stretch"
 )
+
+# ---------------- INPATIENT vs OUTPATIENT ----------------
+st.subheader("🏥 Patient Flow Analysis")
+
+col1, col2, col3 = st.columns(3)
+
+inpatients = len(st.session_state.patients)
+outpatients = len(st.session_state.discharged) if "discharged" in st.session_state else 0
+recent_discharged = st.session_state.last_discharged if "last_discharged" in st.session_state else 0
+
+col1.metric("🛏️ Current Inpatients", inpatients)
+col2.metric("📤 Total Discharged (Cumulative)", outpatients)
+col3.metric("🔄 Discharged This Cycle", recent_discharged)
+
+# -------- INSIGHT --------
+st.markdown("### 📊 Discharge Insight")
+
+if inpatients > 0:
+    st.info(
+        "Patients are discharged gradually to maintain ER capacity. "
+        "Around 10% of patients are discharged each cycle based on treatment completion."
+    )
+
+    st.write(
+        "⏱️ **Understanding Flow:** Patients with higher wait times are more likely to be discharged, "
+        "ensuring continuous patient movement and availability of beds."
+    )
+
+# -------- VIEW DISCHARGED PATIENTS (OPTIONAL) --------
+if "discharged" in st.session_state and not st.session_state.discharged.empty:
+    with st.expander("📄 View Recently Discharged Patients"):
+        st.dataframe(st.session_state.discharged.tail(10), width="stretch")
+
 # ---------------- DEPARTMENT LOAD ----------------
 st.subheader("🏥 Department Load Analysis")
 
