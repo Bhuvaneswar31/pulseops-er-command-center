@@ -142,7 +142,7 @@ if now - st.session_state.last_update >= interval:
     st.session_state.history = pd.concat([
         st.session_state.history,
         pd.DataFrame({
-            "Time": [now],
+            "Time": [datetime.now()],
             "Admissions": [arrivals]
         })
     ], ignore_index=True)
