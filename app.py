@@ -105,7 +105,7 @@ if now - st.session_state.last_update >= interval:
                 "WaitTime": 0,
                 "Department": random.choice(["ER","Cardiology","Orthopedics","Neurology","Pediatrics","General Medicine",
     "Radiology"]),
-                "ArrivalTime": datetime.now().strftime("%H:%M")
+                "ArrivalTime": datetime.now()
             }])
         ], ignore_index=True)
 
@@ -227,8 +227,13 @@ def highlight(row):
     else:
         return ['background-color: #4CAF50']*len(row)
 
+df = st.session_state.patients.copy()
+
+# 🔥 LIVE TIME (current clock)
+df["ArrivalTime"] = datetime.now().strftime("%H:%M")
+
 st.dataframe(
-    st.session_state.patients.style.apply(highlight, axis=1),
+    df.style.apply(highlight, axis=1),
     width="stretch"
 )
 
