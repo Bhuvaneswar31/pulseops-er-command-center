@@ -229,11 +229,10 @@ def highlight(row):
 
 df = st.session_state.patients.copy()
 
-# ✅ Convert stored datetime to HH:MM format
-df["ArrivalTime"] = pd.to_datetime(df["ArrivalTime"]).dt.strftime("%H:%M")
+# ✅ Show CURRENT LIVE TIME (same for all rows)
+current_time = datetime.now().strftime("%H:%M")
 
-# ✅ Sort by latest arrivals
-df = df.sort_values(by="ArrivalTime", ascending=False)
+df["ArrivalTime"] = current_time
 
 st.dataframe(
     df.style.apply(highlight, axis=1),
