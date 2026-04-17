@@ -275,14 +275,49 @@ try:
 
         st.metric("🌦️ Weather Impact Score", weather_score)
 
-        # -------- SHOW MULTIPLIER (NEW ✅) --------
+        # -------- MULTIPLIER --------
         weather_multiplier = 1
         if weather_score >= 2:
             weather_multiplier = 2
         elif weather_score == 1:
             weather_multiplier = 1.5
 
-        st.write(f"📈 Admission Multiplier Active: x{weather_multiplier}")
+        # -------- MULTIPLIER INSIGHT 🔥 --------
+        if weather_multiplier == 1:
+            st.success(f"🟢 Normal Conditions | Multiplier: x1")
+            st.write("Patient inflow is stable. No unusual impact from weather.")
+
+        elif weather_multiplier == 1.5:
+            st.warning(f"🟠 Moderate Impact | Multiplier: x1.5")
+            st.write("Slight increase in patient inflow due to weather conditions (e.g., heat). Expect moderate workload.")
+
+        elif weather_multiplier == 2:
+            st.error(f"🔴 High Surge Alert | Multiplier: x2")
+            st.write("Severe weather conditions detected. Patient inflow has doubled and may strain hospital resources.")
+
+        # -------- CAUSE → EFFECT INSIGHT 🔥 --------
+        st.markdown("### 📊 Operational Insight")
+
+        if weather_score >= 2:
+            st.markdown(
+                "🚨 **Cause:** Extreme weather (high temperature or storm)\n\n"
+                "📈 **Effect:** Sudden spike in emergency cases such as accidents, heat strokes, and critical conditions.\n\n"
+                "🏥 **Impact:** ER occupancy and wait times are expected to increase significantly."
+            )
+
+        elif weather_score == 1:
+            st.markdown(
+                "⚠️ **Cause:** Moderate weather impact (e.g., heat)\n\n"
+                "📈 **Effect:** Increase in moderate cases like fatigue or dehydration.\n\n"
+                "🏥 **Impact:** Slight rise in patient inflow and workload."
+            )
+
+        else:
+            st.markdown(
+                "✅ **Cause:** Stable weather conditions\n\n"
+                "📈 **Effect:** Normal patient flow.\n\n"
+                "🏥 **Impact:** No additional strain on hospital operations."
+            )
 
         # -------- STORE WEATHER HISTORY --------
         st.session_state.weather_history = pd.concat([
