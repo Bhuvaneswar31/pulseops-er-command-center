@@ -28,34 +28,16 @@ st.markdown("""
 section[data-testid="stSidebar"] {
     background: rgba(0,0,0,0.95);
 }
-.alert-red {
-    background: rgba(255,77,77,0.25);
-    padding: 10px;
-    border-radius: 8px;
-    margin-bottom: 8px;
-}
-.alert-yellow {
-    background: rgba(255,193,7,0.25);
-    padding: 10px;
-    border-radius: 8px;
-    margin-bottom: 8px;
-}
-.alert-green {
-    background: rgba(76,175,80,0.25);
-    padding: 10px;
-    border-radius: 8px;
-    margin-bottom: 8px;
-}
+.alert-red { background: rgba(255,77,77,0.25); padding:10px; border-radius:8px; margin-bottom:8px; }
+.alert-yellow { background: rgba(255,193,7,0.25); padding:10px; border-radius:8px; margin-bottom:8px; }
+.alert-green { background: rgba(76,175,80,0.25); padding:10px; border-radius:8px; margin-bottom:8px; }
 </style>
 """, unsafe_allow_html=True)
 
 # ---------------- SIDEBAR ----------------
 st.sidebar.title("🚑 ER Command Panel")
 
-mode = st.sidebar.radio(
-    "Simulation Mode",
-    ["Demo (1 min)", "Real (15 min)", "Real (30 min)"]
-)
+mode = st.sidebar.radio("Simulation Mode", ["Demo (1 min)", "Real (15 min)", "Real (30 min)"])
 
 interval = {
     "Demo (1 min)": timedelta(minutes=1),
@@ -68,9 +50,7 @@ TOTAL_DOCS = 10
 
 # ---------------- SESSION ----------------
 if "patients" not in st.session_state:
-    st.session_state.patients = pd.DataFrame(columns=[
-        "PatientID","Triage","WaitTime","Department","ArrivalTime"
-    ])
+    st.session_state.patients = pd.DataFrame(columns=["PatientID","Triage","WaitTime","Department","ArrivalTime"])
 
 if "history" not in st.session_state:
     st.session_state.history = pd.DataFrame(columns=["Time","Admissions"])
@@ -88,7 +68,6 @@ if now - st.session_state.last_update >= interval:
 
     hour = now.hour
 
-    # -------- BASE ARRIVAL --------
     if 8 <= hour <= 11:
         arrivals = random.randint(3,6)
     elif 18 <= hour <= 22:
@@ -96,12 +75,9 @@ if now - st.session_state.last_update >= interval:
     else:
         arrivals = random.randint(1,3)
 
-    # -------- WEATHER MULTIPLIER --------
     weather_multiplier = 1
-
-    if "weather_history" in st.session_state and not st.session_state.weather_history.empty:
+    if not st.session_state.weather_history.empty:
         latest_weather = st.session_state.weather_history["WeatherScore"].iloc[-1]
-
         if latest_weather >= 2:
             weather_multiplier = 2
         elif latest_weather == 1:
@@ -109,14 +85,12 @@ if now - st.session_state.last_update >= interval:
 
     arrivals = int(arrivals * weather_multiplier)
 
-    # -------- PATIENT GENERATION WITH WEATHER TRIAGE --------
+    # -------- PATIENT GENERATION --------
     for _ in range(arrivals):
-
         triage = random.randint(1,5)
 
         if not st.session_state.weather_history.empty:
             latest_weather = st.session_state.weather_history["WeatherScore"].iloc[-1]
-
             if latest_weather >= 2:
                 triage = random.choices([1,2,3,4,5], weights=[30,25,20,15,10])[0]
             elif latest_weather == 1:
@@ -133,43 +107,33 @@ if now - st.session_state.last_update >= interval:
             }])
         ], ignore_index=True)
 
+    # -------- DISCHARGE LOGIC --------
+    discharged_now = 0
 
-   
-# -------- DISCHARGE LOGIC (WAIT-TIME BASED) 🔥 --------
-discharged_now = 0
+    if not st.session_state.patients.empty:
+        discharge_rate = 0.1
+        discharge_count = int(len(st.session_state.patients) * discharge_rate)
 
-if not st.session_state.patients.empty:
+        if discharge_count > 0:
+            discharged_now = discharge_count
 
-    discharge_rate = 0.1  # 10% leave per cycle
-    discharge_count = int(len(st.session_state.patients) * discharge_rate)
+            if "discharged" not in st.session_state:
+                st.session_state.discharged = pd.DataFrame(columns=st.session_state.patients.columns)
 
-    if discharge_count > 0:
-        discharged_now = discharge_count
-
-        # Initialize discharged storage
-        if "discharged" not in st.session_state:
-            st.session_state.discharged = pd.DataFrame(
-                columns=st.session_state.patients.columns
+            discharged_patients = (
+                st.session_state.patients
+                .sort_values(by="WaitTime", ascending=False)
+                .iloc[:discharge_count]
             )
 
-        # Select patients with highest wait time
-        discharged_patients = (
-            st.session_state.patients
-            .sort_values(by="WaitTime", ascending=False)
-            .iloc[:discharge_count]
-        )
+            st.session_state.discharged = pd.concat(
+                [st.session_state.discharged, discharged_patients],
+                ignore_index=True
+            )
 
-        # Add to discharged list
-        st.session_state.discharged = pd.concat(
-            [st.session_state.discharged, discharged_patients],
-            ignore_index=True
-        )
+            remaining = st.session_state.patients.drop(discharged_patients.index)
+            st.session_state.patients = remaining.reset_index(drop=True)
 
-        # Remove from active patients
-        remaining_patients = st.session_state.patients.drop(discharged_patients.index)
-        st.session_state.patients = remaining_patients.reset_index(drop=True)
-
-# Store last cycle discharge count
     st.session_state.last_discharged = discharged_now
 
     # -------- STORE HISTORY --------
